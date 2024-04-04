@@ -5,14 +5,6 @@ Cost int
 OrderedAt int64
 }
 
-type Client struct{
-ID int 
-Username string 
-Email string
-Password string
-Orders []*Order
-Sort int
-}
 
 type Item struct{
 ID int 
