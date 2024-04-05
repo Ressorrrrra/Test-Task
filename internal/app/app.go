@@ -15,3 +15,9 @@ func New(cfg *config.Config) (app *App, err error) {
 
 	return
 }
+
+func (app *App) Run() {
+	//mux := http.NewServeMux()
+
+	//mux.HandleFunc("orders/create", )
+}
