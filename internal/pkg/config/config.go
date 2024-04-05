@@ -1,4 +1,8 @@
-include (
+package config
+
+import (
+	"os"
+
 	"gopkg.in/yaml.v2"
 )
 
@@ -10,19 +14,24 @@ type Database struct {
 	Password string `yaml:"password"`
 }
 
-type ServerData struct 
-{
+type ServerData struct {
 	Port string `yaml:"port"`
 }
 
 type Config struct {
-	db Database
-	server ServerData
+	Db     *Database   `yaml:"db"`
+	Server *ServerData `yaml:"server"`
 }
 
-func Configure() {
+func Configure() (*Config, error) {
+	configFile, err := os.ReadFile("internal\\pkg\\config\\config.yaml")
+	if err != nil {
+		return nil, err
+	}
+	db := &Database{}
+	server := &ServerData{}
+	cfg := &Config{Db: db, Server: server}
+	err = yaml.Unmarshal(configFile, cfg)
 
+	return cfg, err
 }
-
-
-
