@@ -1,6 +1,7 @@
 package app
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/Ressorrrrra/Test-Task/internal/app/data"
@@ -34,10 +35,11 @@ func New(cfg *config.Config) (app *App, err error) {
 func (app *App) Run() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/orders", app.Ep.GetAll)
+	mux.HandleFunc("/orders/create", app.Ep.Create)
+	mux.HandleFunc("/orders/update", app.Ep.Update)
+	mux.HandleFunc("/orders/delete", app.Ep.Delete)
 
-	err := http.ListenAndServe(":"+app.Cfg.Server.Port, mux)
-	if err != nil {
-		return err
-	}
+	log.Fatal(http.ListenAndServe(":"+app.Cfg.Server.Port, mux))
+
 	return nil
 }

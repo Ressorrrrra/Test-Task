@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/Ressorrrrra/Test-Task/internal/pkg/config"
 	"github.com/restream/reindexer"
@@ -20,6 +21,7 @@ func New(cfg *config.Config) (*Database, error) {
 		cfg.Db.Port,
 		cfg.Db.Database)
 
+	log.Println(connectionString)
 	db.Connection = reindexer.NewReindex(connectionString, reindexer.WithCreateDBIfMissing())
 	err := db.Connection.Ping()
 	if err != nil {

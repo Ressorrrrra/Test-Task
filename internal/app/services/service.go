@@ -17,14 +17,14 @@ func (s *Service) Get() (orders []*order.Order, err error) {
 	return
 }
 
-func (s *Service) Create(order order.Order, err error) {
-	err = s.repos.Create(order)
+func (s *Service) Create(order order.Order) error {
+	return s.repos.Create(order)
 }
 
-func Update() {
-
+func (s *Service) Update(order order.Order) error {
+	return s.repos.Update(order)
 }
 
-func Delete() {
-
+func (s *Service) Delete(id int) error {
+	return s.repos.Delete(id)
 }

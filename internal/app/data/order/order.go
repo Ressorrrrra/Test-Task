@@ -1,22 +1,24 @@
 package order
 
 import (
+	"errors"
+	"log"
+
 	"github.com/Ressorrrrra/Test-Task/internal/app/data"
 	"github.com/restream/reindexer"
 )
 
 type Order struct {
-	ID        int
+	ID        int `reindex:"id,,pk"`
 	Items     []*Item
-	Cost      int
-	OrderedAt int64
+	Cost      int   `reindex:"cost"`
+	OrderedAt int64 `reindex:"orderedAt"`
 }
 
 type Item struct {
-	ID          int
-	Name        string
-	Description string
-	Price       int
+	Name        string `reindex:"name"`
+	Description string `reindex:"description"`
+	Price       int    `reindex:"price"`
 }
 
 type Repository struct {
@@ -25,23 +27,26 @@ type Repository struct {
 
 func New(db *data.Database) (repos *Repository) {
 	repos = &Repository{Db: db}
+
 	return
 }
 
 func (r *Repository) Get() (orders []*Order, err error) {
-
-	if namespaceErr := r.Db.Connection.OpenNamespace("Orders", &reindexer.NamespaceOptions{}, Order{}); namespaceErr != nil {
+	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})
+	defer r.Db.Connection.CloseNamespace("Orders")
+	if namespaceErr != nil {
 		return orders, namespaceErr
 	}
 
 	query := r.Db.Connection.Query("Orders").ReqTotal()
 	qr := query.Exec()
-
+	defer qr.Close()
 	if execErr := qr.Error(); execErr != nil {
 		return orders, execErr
 	}
 
 	for qr.Next() {
+		log.Println("appending")
 		item := qr.Object().(*Order)
 		orders = append(orders, item)
 	}
@@ -49,15 +54,50 @@ func (r *Repository) Get() (orders []*Order, err error) {
 	return
 }
 
-func (r Repository) Create(order Order) error {
+func (r *Repository) Create(order Order) error {
 
-	if namespaceErr := r.Db.Connection.OpenNamespace("Orders", &reindexer.NamespaceOptions{}, Order{}); namespaceErr != nil {
+	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})
+	defer r.Db.Connection.CloseNamespace("Orders")
+	if namespaceErr != nil {
 		return namespaceErr
 	}
 
-	if upsertErr := r.Db.Connection.Upsert("Orders", (&order)); upsertErr != nil {
+	if _, upsertErr := r.Db.Connection.Insert("Orders", (&order), "id=serial()", "orderedAt=now()"); upsertErr != nil {
 		return upsertErr
 	}
 
+	return nil
+}
+
+func (r *Repository) Update(order Order) error {
+
+	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})
+	defer r.Db.Connection.CloseNamespace("Orders")
+	if namespaceErr != nil {
+		return namespaceErr
+	}
+
+	if _, upsertErr := r.Db.Connection.Update("Orders", (&order)); upsertErr != nil {
+		return upsertErr
+	}
+
+	return nil
+}
+
+func (r *Repository) Delete(id int) error {
+
+	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})
+	defer r.Db.Connection.CloseNamespace("Orders")
+	if namespaceErr != nil {
+		return namespaceErr
+	}
+	order, found := r.Db.Connection.Query("Orders").Where("id", reindexer.EQ, id).Get()
+	if found {
+		if upsertErr := r.Db.Connection.Delete("Orders", (order)); upsertErr != nil {
+			return upsertErr
+		}
+	} else {
+		return errors.New("object wasn't found")
+	}
 	return nil
 }

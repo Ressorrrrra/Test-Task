@@ -1,7 +1,7 @@
 db:
   hostname: "localhost"
   database: "Orders"
-  port: "5432"
+  port: "6534"
   username: 
   password: 
 

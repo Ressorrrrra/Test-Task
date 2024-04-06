@@ -24,14 +24,18 @@ type Config struct {
 }
 
 func Configure() (*Config, error) {
-	configFile, err := os.ReadFile("internal\\pkg\\config\\config.yaml")
+	f, err := os.Open("C:\\Users\\jbob0\\source\\repos\\Test\\internal\\pkg\\config\\config.yaml")
+
+	cfg := &Config{}
 	if err != nil {
 		return nil, err
 	}
-	db := &Database{}
-	server := &ServerData{}
-	cfg := &Config{Db: db, Server: server}
-	err = yaml.Unmarshal(configFile, cfg)
+	defer f.Close()
 
-	return cfg, err
+	decoder := yaml.NewDecoder(f)
+	err = decoder.Decode(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
 }
