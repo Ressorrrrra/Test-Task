@@ -11,10 +11,12 @@ func New(rep *order.Repository) (s *Service) {
 	return
 }
 
-func (s *Service) Get() (orders []*order.Order, err error) {
-	orders, err = s.repos.Get()
+func (s *Service) Get() ([]*order.Order, error) {
+	return s.repos.Get()
+}
 
-	return
+func (s *Service) GetById(id int) (*order.Order, error) {
+	return s.repos.GetById(id)
 }
 
 func (s *Service) Create(order order.Order) error {

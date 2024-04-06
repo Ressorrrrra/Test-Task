@@ -35,6 +35,7 @@ func New(cfg *config.Config) (app *App, err error) {
 func (app *App) Run() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/orders", app.Ep.GetAll)
+	mux.HandleFunc("/orders/getById", app.Ep.GetById)
 	mux.HandleFunc("/orders/create", app.Ep.Create)
 	mux.HandleFunc("/orders/update", app.Ep.Update)
 	mux.HandleFunc("/orders/delete", app.Ep.Delete)

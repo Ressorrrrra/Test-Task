@@ -54,6 +54,21 @@ func (r *Repository) Get() (orders []*Order, err error) {
 	return
 }
 
+func (r *Repository) GetById(id int) (*Order, error) {
+	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})
+	defer r.Db.Connection.CloseNamespace("Orders")
+	if namespaceErr != nil {
+		return nil, namespaceErr
+	}
+
+	order, found := r.Db.Connection.Query("Orders").Where("id", reindexer.EQ, id).Get()
+	if found {
+		return order.(*Order), nil
+	} else {
+		return nil, errors.New("object wasn't found")
+	}
+}
+
 func (r *Repository) Create(order Order) error {
 
 	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})

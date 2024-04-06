@@ -34,6 +34,41 @@ func (e *Endpoint) GetAll(writer http.ResponseWriter, request *http.Request) {
 	}
 }
 
+func (e *Endpoint) GetById(writer http.ResponseWriter, request *http.Request) {
+	if request.Method == http.MethodGet {
+		head := request.Header.Get("Content-Type")
+		if !strings.Contains(head, "application/json") {
+			writer.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		type IdObject struct {
+			Id int
+		}
+		var id IdObject
+
+		err := json.NewDecoder(request.Body).Decode(&id)
+		if err != nil {
+			http.Error(writer, fmt.Sprintln(err), http.StatusBadRequest)
+			return
+		}
+
+		order, err := e.S.GetById(id.Id)
+		if err != nil {
+			http.Error(writer, fmt.Sprintln(err), http.StatusNotFound)
+			return
+		}
+
+		writer.WriteHeader(http.StatusOK)
+		writer.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(writer).Encode(order)
+
+	} else {
+		writer.WriteHeader(http.StatusMethodNotAllowed)
+		log.Println((request.Method))
+	}
+}
+
 func (e *Endpoint) Create(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == http.MethodPost {
 		head := request.Header.Get("Content-Type")
