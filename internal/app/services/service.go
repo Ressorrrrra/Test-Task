@@ -6,6 +6,11 @@ type Service struct {
 	repos *order.Repository
 }
 
+func New(rep *order.Repository) (s *Service) {
+	s = &Service{repos: rep}
+	return
+}
+
 func (s *Service) Get() (orders []*order.Order, err error) {
 	orders, err = s.repos.Get()
 

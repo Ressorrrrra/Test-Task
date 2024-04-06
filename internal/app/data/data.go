@@ -11,7 +11,7 @@ type Database struct {
 	Connection *reindexer.Reindexer
 }
 
-func CreateDb(cfg config.Config) (*Database, error) {
+func New(cfg *config.Config) (*Database, error) {
 	var connectionString string
 	db := &Database{}
 

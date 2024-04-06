@@ -20,10 +20,10 @@ type Item struct {
 }
 
 type Repository struct {
-	Db data.Database
+	Db *data.Database
 }
 
-func New(db data.Database) (repos *Repository) {
+func New(db *data.Database) (repos *Repository) {
 	repos = &Repository{Db: db}
 	return
 }
