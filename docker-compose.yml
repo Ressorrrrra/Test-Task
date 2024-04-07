@@ -1,7 +1,0 @@
-version: '3'
-
-services:
-  reindexer:
-    image: reindexer/reindexer
-    ports:
-      - "9088:9088"
