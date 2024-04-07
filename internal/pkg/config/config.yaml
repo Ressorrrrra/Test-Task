@@ -1,9 +1,0 @@
-db:
-  hostname: "localhost"
-  database: "Orders"
-  port: "6534"
-  username: 
-  password: 
-
-server:
-  port: "8001"
