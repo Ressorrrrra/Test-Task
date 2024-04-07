@@ -32,27 +32,51 @@ func New(db *data.Database) (repos *Repository) {
 	return
 }
 
-func (r *Repository) Get() (orders []*Order, err error) {
+func (r *Repository) Get() ([]*Order, error) {
 	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})
 	defer r.Db.Connection.CloseNamespace("Orders")
 	if namespaceErr != nil {
-		return orders, namespaceErr
+		return nil, namespaceErr
 	}
 
 	query := r.Db.Connection.Query("Orders").Sort("sort", true).ReqTotal()
 	qr := query.Exec()
 	defer qr.Close()
 	if execErr := qr.Error(); execErr != nil {
-		return orders, execErr
+		return nil, execErr
 	}
 
+	var orders []*Order
 	for qr.Next() {
 		log.Println("appending")
 		item := qr.Object().(*Order)
 		orders = append(orders, item)
 	}
 
-	return
+	return orders, nil
+}
+
+func (r *Repository) GetOffset(offset, limit int) ([]*Order, error) {
+	namespaceErr := r.Db.Connection.OpenNamespace("Orders", reindexer.DefaultNamespaceOptions(), Order{})
+	defer r.Db.Connection.CloseNamespace("Orders")
+	if namespaceErr != nil {
+		return nil, namespaceErr
+	}
+
+	query := r.Db.Connection.Query("Orders").Sort("sort", true).Offset(offset).Limit(limit).ReqTotal()
+	qr := query.Exec()
+	defer qr.Close()
+	if execErr := qr.Error(); execErr != nil {
+		return nil, execErr
+	}
+
+	var orders []*Order
+	for qr.Next() {
+		item := qr.Object().(*Order)
+		orders = append(orders, item)
+	}
+
+	return orders, nil
 }
 
 func (r *Repository) GetById(id int) (*Order, error) {

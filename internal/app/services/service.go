@@ -8,6 +8,12 @@ import (
 	"github.com/Ressorrrrra/Test-Task/internal/pkg/cache"
 )
 
+type DtoOrder struct {
+	Items     []*order.Item
+	Cost      int   `reindex:"cost"`
+	OrderedAt int64 `reindex:"orderedAt"`
+}
+
 type Service struct {
 	repos *order.Repository
 	c     *cache.Cache
@@ -19,8 +25,37 @@ func New(rep *order.Repository) (s *Service) {
 	return
 }
 
-func (s *Service) Get() ([]*order.Order, error) {
-	return s.repos.Get()
+func ConvertToDto(orders []*order.Order) []*DtoOrder {
+	resultChannel := make(chan []*DtoOrder)
+	go func(_orders []*order.Order) {
+		defer close(resultChannel)
+		var dto []*DtoOrder
+		for _, obj := range _orders {
+			dtoObj := DtoOrder{
+				Items:     obj.Items,
+				Cost:      obj.Cost,
+				OrderedAt: obj.OrderedAt,
+			}
+			dto = append(dto, &dtoObj)
+		}
+		resultChannel <- dto
+	}(orders)
+
+	dto := <-resultChannel
+	return dto
+}
+
+func (s *Service) Get() ([]*DtoOrder, error) {
+
+	orders, err := s.repos.Get()
+
+	return ConvertToDto(orders), err
+}
+
+func (s *Service) GetPage(page, count int) ([]*DtoOrder, error) {
+	orders, err := s.repos.GetOffset((page-1)*count, count)
+
+	return ConvertToDto(orders), err
 }
 
 func (s *Service) GetById(id int) (*order.Order, error) {

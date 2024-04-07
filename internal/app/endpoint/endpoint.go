@@ -22,35 +22,32 @@ func New(s *service.Service) (e *Endpoint) {
 
 func (e *Endpoint) GetAll(writer http.ResponseWriter, request *http.Request) {
 	if request.Method == http.MethodGet {
-		response, err := e.S.Get()
-		if err != nil {
-			log.Fatal(err)
-		}
-		type DtoOrder struct {
-			Items     []*order.Item
-			Cost      int   `reindex:"cost"`
-			OrderedAt int64 `reindex:"orderedAt"`
-		}
-
-		resultChannel := make(chan []DtoOrder)
-		go func(docs []*order.Order) {
-			defer close(resultChannel)
-			var dtoResponse []DtoOrder
-			for _, obj := range response {
-				dtoObj := DtoOrder{
-					Items:     obj.Items,
-					Cost:      obj.Cost,
-					OrderedAt: obj.OrderedAt,
-				}
-				dtoResponse = append(dtoResponse, dtoObj)
+		var response []*service.DtoOrder
+		var err error
+		if strings.Contains(request.Header.Get("Content-Type"), "application/json") {
+			type PageBody struct {
+				Page  int `json:"page"`
+				Count int `json:"count"`
 			}
-			resultChannel <- dtoResponse
-		}(response)
+			var pageBody PageBody
 
-		dtoResponse := <-resultChannel
-
+			err := json.NewDecoder(request.Body).Decode(&pageBody)
+			if err != nil || pageBody.Page < 1 || pageBody.Count < 1 {
+				http.Error(writer, fmt.Sprintln(err), http.StatusBadRequest)
+				return
+			}
+			response, err = e.S.GetPage(pageBody.Page, pageBody.Count)
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			response, err = e.S.Get()
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
 		writer.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(writer).Encode(dtoResponse)
+		json.NewEncoder(writer).Encode(response)
 	} else {
 		writer.WriteHeader(http.StatusMethodNotAllowed)
 	}
