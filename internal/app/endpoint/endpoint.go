@@ -26,9 +26,31 @@ func (e *Endpoint) GetAll(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		type DtoOrder struct {
+			Items     []*order.Item
+			Cost      int   `reindex:"cost"`
+			OrderedAt int64 `reindex:"orderedAt"`
+		}
+
+		resultChannel := make(chan []DtoOrder)
+		go func(docs []*order.Order) {
+			defer close(resultChannel)
+			var dtoResponse []DtoOrder
+			for _, obj := range response {
+				dtoObj := DtoOrder{
+					Items:     obj.Items,
+					Cost:      obj.Cost,
+					OrderedAt: obj.OrderedAt,
+				}
+				dtoResponse = append(dtoResponse, dtoObj)
+			}
+			resultChannel <- dtoResponse
+		}(response)
+
+		dtoResponse := <-resultChannel
 
 		writer.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(writer).Encode(response)
+		json.NewEncoder(writer).Encode(dtoResponse)
 	} else {
 		writer.WriteHeader(http.StatusMethodNotAllowed)
 	}

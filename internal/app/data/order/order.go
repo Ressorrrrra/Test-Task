@@ -13,6 +13,7 @@ type Order struct {
 	Items     []*Item
 	Cost      int   `reindex:"cost"`
 	OrderedAt int64 `reindex:"orderedAt"`
+	Sort      int   `reindex:"sort"`
 }
 
 type Item struct {
@@ -38,7 +39,7 @@ func (r *Repository) Get() (orders []*Order, err error) {
 		return orders, namespaceErr
 	}
 
-	query := r.Db.Connection.Query("Orders").ReqTotal()
+	query := r.Db.Connection.Query("Orders").Sort("sort", true).ReqTotal()
 	qr := query.Exec()
 	defer qr.Close()
 	if execErr := qr.Error(); execErr != nil {
